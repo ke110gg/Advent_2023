@@ -1,4 +1,4 @@
-(executable
- (public_name day_1)
- (name day_1)
+(executables
+ (public_names day_1 day_2)
+ (names day_1 day_2)
  (libraries advent core fmt))
