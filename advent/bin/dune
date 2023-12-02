@@ -1,0 +1,4 @@
+(executable
+ (public_name day_1)
+ (name day_1)
+ (libraries advent core fmt))
