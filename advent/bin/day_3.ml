@@ -19,38 +19,30 @@ let parse_line line line_num ~numbers ~symbols =
       line
       ~init:(numbers, symbols, 0, "")
       ~f:(fun (numbers, symbols, i, current_num) col ->
-        match col with
-        | '.' ->
-          if String.length current_num > 0
-          then
-            ( numbers @ [ line_num, i - String.length current_num, current_num ]
-            , symbols
-            , i + 1
-            , "" )
-          else numbers, symbols, i + 1, ""
-        | _ ->
-          if Char.is_digit col
-          then numbers, symbols, 1 + i, current_num ^ String.of_char col
-          else if String.length current_num > 0
-          then
-            ( numbers @ [ line_num, i - String.length current_num, current_num ]
-            , PairsMap.add_exn symbols ~key:(line_num, i) ~data:(0, col)
-            , i + 1
-            , "" )
-          else
-            numbers, PairsMap.add_exn symbols ~key:(line_num, i) ~data:(0, col), i + 1, "")
+        let numbers, symbols, current_num =
+          match col with
+          | '.' ->
+            let numbers =
+              if String.length current_num > 0
+              then numbers @ [ line_num, i - String.length current_num, current_num ]
+              else numbers
+            in
+            numbers, symbols, ""
+          | _ ->
+            if Char.is_digit col
+            then numbers, symbols, current_num ^ String.of_char col
+            else if String.length current_num > 0
+            then
+              ( numbers @ [ line_num, i - String.length current_num, current_num ]
+              , PairsMap.add_exn symbols ~key:(line_num, i) ~data:(0, col)
+              , "" )
+            else numbers, PairsMap.add_exn symbols ~key:(line_num, i) ~data:(0, col), ""
+        in
+        numbers, symbols, i + 1, current_num)
   in
   if String.length current_num > 0
   then numbers @ [ line_num, i - String.length current_num, current_num ], symbols
   else numbers, symbols
-;;
-
-let rec parse_data lines line_num ~numbers ~symbols =
-  match lines with
-  | [] -> numbers, symbols
-  | head :: body ->
-    let numbers, symbols = parse_line head line_num ~numbers ~symbols in
-    parse_data body (line_num + 1) ~numbers ~symbols
 ;;
 
 let maybe_add_number (r, c, value) symbols =
@@ -101,6 +93,14 @@ let maybe_add_number_part_2 (r, c, value) symbols =
                | _ -> acc, symbols)))
   in
   acc
+;;
+
+let rec parse_data lines line_num ~numbers ~symbols =
+  match lines with
+  | [] -> numbers, symbols
+  | head :: body ->
+    let numbers, symbols = parse_line head line_num ~numbers ~symbols in
+    parse_data body (line_num + 1) ~numbers ~symbols
 ;;
 
 let rec process_data ~acc ~numbers ~symbols =
