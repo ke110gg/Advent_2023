@@ -1,4 +1,5 @@
 (executables
- (public_names day_1 day_2)
- (names day_1 day_2)
+ (public_names day_1 day_2 day_3)
+ (names day_1 day_2 day_3)
+  (preprocess(pps ppx_sexp_conv))
  (libraries advent core fmt))
