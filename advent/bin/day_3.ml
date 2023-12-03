@@ -120,18 +120,14 @@ let rec process_data_part2 ~acc ~numbers ~symbols =
     process_data_part2 ~acc ~numbers:body ~symbols
 ;;
 
+let lines = Advent.Advent_tools.read_lines "./input/puzzle3.txt"
+
 let () =
-  let lines = Advent.Advent_tools.read_lines "./input/puzzle3.txt" in
-  let numbers = [] in
-  let symbols = PairsMap.empty in
-  let numbers, symbols = parse_data lines 0 ~numbers ~symbols in
+  let numbers, symbols = parse_data lines 0 ~numbers:[] ~symbols:PairsMap.empty in
   process_data ~acc:0 ~numbers ~symbols |> Fmt.pr "Result: %d@."
 ;;
 
 let () =
-  let lines = Advent.Advent_tools.read_lines "./input/puzzle3.txt" in
-  let numbers = [] in
-  let symbols = PairsMap.empty in
-  let numbers, symbols = parse_data lines 0 ~numbers ~symbols in
+  let numbers, symbols = parse_data lines 0 ~numbers:[] ~symbols:PairsMap.empty in
   process_data_part2 ~acc:0 ~numbers ~symbols |> Fmt.pr "Result: %d@."
 ;;
