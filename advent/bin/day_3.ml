@@ -1,6 +1,6 @@
 open Core
 
-module IntPairs = struct
+module Symbol = struct
   type t = int * int [@@deriving sexp]
 
   let compare (x0, y0) (x1, y1) =
@@ -10,7 +10,7 @@ module IntPairs = struct
   ;;
 end
 
-module PairsMap = Map.Make (IntPairs)
+module PairsMap = Map.Make (Symbol)
 
 let parse_line line line_num ~numbers ~symbols =
   let line = String.to_list line in
@@ -34,10 +34,11 @@ let parse_line line line_num ~numbers ~symbols =
           else if String.length current_num > 0
           then
             ( numbers @ [ line_num, i - String.length current_num, current_num ]
-            , PairsMap.add_exn symbols ~key:(line_num, i) ~data:0
+            , PairsMap.add_exn symbols ~key:(line_num, i) ~data:(0, col)
             , i + 1
             , "" )
-          else numbers, PairsMap.add_exn symbols ~key:(line_num, i) ~data:0, i + 1, "")
+          else
+            numbers, PairsMap.add_exn symbols ~key:(line_num, i) ~data:(0, col), i + 1, "")
   in
   if String.length current_num > 0
   then numbers @ [ line_num, i - String.length current_num, current_num ], symbols
@@ -82,20 +83,22 @@ let maybe_add_number_part_2 (r, c, value) symbols =
           (List.range left_bound right_bound)
           ~init:(acc, symbols)
           ~f:(fun (acc, symbols) c ->
-            if acc > 0
-            then acc, symbols
-            else (
-              match PairsMap.find symbols (r, c) with
-              | None -> acc, symbols
-              | Some v ->
-                if v = 0
-                then acc, PairsMap.set symbols ~key:(r, c) ~data:(Int.of_string value)
-                else if v < 0
-                then acc - v, PairsMap.remove symbols (r, c)
-                else
-                  ( acc + (v * Int.of_string value)
-                  , PairsMap.set symbols ~key:(r, c) ~data:(-1 * v * Int.of_string value)
-                  ))))
+            match PairsMap.find symbols (r, c) with
+            | None -> acc, symbols
+            | Some (v, ch) ->
+              (match ch with
+               | '*' ->
+                 if v = 0
+                 then acc, PairsMap.set symbols ~key:(r, c) ~data:(Int.of_string value, ch)
+                 else if v < 0
+                 then acc - v, PairsMap.remove symbols (r, c)
+                 else
+                   ( acc + (v * Int.of_string value)
+                   , PairsMap.set
+                       symbols
+                       ~key:(r, c)
+                       ~data:(-1 * v * Int.of_string value, ch) )
+               | _ -> acc, symbols)))
   in
   acc
 ;;
