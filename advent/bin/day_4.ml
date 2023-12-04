@@ -5,7 +5,7 @@ exception Invalid_input
 
 let add_up_row row =
   match String.split_on_chars row ~on:[ ':'; '|' ] with
-  | _first_piece :: winning_numbers :: my_numbers :: _rest ->
+  | _ :: winning_numbers :: my_numbers :: _ ->
     let winning_set =
       StringSet.of_list
         (List.filter (String.split winning_numbers ~on:' ') ~f:(fun s ->
