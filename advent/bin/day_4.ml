@@ -17,20 +17,20 @@ let add_up_row row =
   | _ -> raise Invalid_input
 ;;
 
-let rec process_data_part_1 lines =
+let rec process_data_part_1 lines accu =
   match lines with
-  | [] -> 0
+  | [] -> accu
   | row :: body ->
     let result = add_up_row row in
     let result = if result = 0 then 0 else Int.pow 2 (result - 1) in
-    result + process_data_part_1 body
+    (process_data_part_1 [@tailcall]) body (result + accu)
 ;;
 
 let increment_array array increment_by = Array.map array ~f:(fun x -> x + increment_by)
 
-let rec process_data_part_2 lines results i =
+let rec process_data_part_2 lines results i accu =
   match lines with
-  | [] -> 0
+  | [] -> accu
   | row :: body ->
     let result = add_up_row row in
     let num_current_card = Array.get results i in
@@ -47,10 +47,10 @@ let rec process_data_part_2 lines results i =
           ~dst_pos:(i + 1)
           ~len:result
     in
-    num_current_card + process_data_part_2 body results (i + 1)
+    (process_data_part_2 [@tailcall]) body results (i + 1) (num_current_card + accu)
 ;;
 
 let lines = Advent.Advent_tools.read_lines "./input/puzzle_4.txt"
-let () = process_data_part_1 lines |> Fmt.pr "Result: %d@."
+let () = process_data_part_1 lines 0 |> Fmt.pr "Result: %d@."
 let results = Array.create ~len:(List.length lines) 1
-let () = process_data_part_2 lines results 0 |> Fmt.pr "Result: %d@."
+let () = process_data_part_2 lines results 0 0 |> Fmt.pr "Result: %d@."
