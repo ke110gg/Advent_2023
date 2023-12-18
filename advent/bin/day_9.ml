@@ -15,16 +15,8 @@ let rec end_state list =
 
 let rec predict_next list acc =
   let differences = calc_differences list [] in
-  (**let () = Fmt.pr "differences \n" in
-  let () = List.iter differences ~f:(fun x -> Fmt.pr "%d," x) in
-  let () = Fmt.pr "\n" in**)
   if end_state differences
-  then (
-    (**let () = Fmt.pr "aggregate \n" in**)
-    List.last_exn list
-    + List.fold acc ~init:0 ~f:(fun x y ->
-      (**let () = Fmt.pr "%d\n" y in**)
-      x + y))
+  then List.last_exn list + List.fold acc ~init:0 ~f:(fun x y -> x + y)
   else predict_next differences (acc @ [ List.last_exn list ])
 ;;
 
@@ -35,9 +27,8 @@ let lines =
     List.map (String.split l ~on:' ') ~f:(fun s -> Int.of_string s))
 ;;
 
-let results = List.map lines ~f:(fun l -> predict_next l []);;
+let results = List.map lines ~f:(fun l -> predict_next l [])
+let results_2 = List.map lines ~f:(fun l -> predict_next (List.rev l) []);;
 
-List.fold results ~init:0 ~f:(fun x acc ->
-  (**let () = Fmt.pr "%d\n" x in**)
-  x + acc)
-|> Fmt.pr "Result: %d@"
+List.fold results ~init:0 ~f:(fun x acc -> x + acc) |> Fmt.pr "Result: %d\n";;
+List.fold results_2 ~init:0 ~f:(fun x acc -> x + acc) |> Fmt.pr "Result: %d\n"
