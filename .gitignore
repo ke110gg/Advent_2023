@@ -30,3 +30,4 @@ setup.log
 _opam/
 Advent_2023.code-workspace
 advent/.vscode/settings.json
+advent/bin/.day_4.ml.swp
