@@ -121,17 +121,9 @@ let extend_path path grid =
   | _ -> raise (Invalid_argument "extend_path error")
 ;;
 
-let rec find_intersections list =
-  match list with
-  | [] -> None
-  | _ :: [] -> None
-  | a :: body ->
-    if List.mem body ~equal:(fun (x1, y1) (x2, y2) -> x1 = x2 && y1 = y2) a
-    then Some a
-    else find_intersections body
-;;
+let compare_pos (y1, x1) (y2, x2) = y1 = y2 && x1 = x2
 
-let rec make_paths grid paths =
+let rec make_paths grid paths start =
   let new_paths =
     List.fold paths ~init:[] ~f:(fun acc l ->
       match extend_path l grid with
@@ -141,19 +133,21 @@ let rec make_paths grid paths =
   if List.length new_paths = 0
   then raise (Invalid_argument "no more paths")
   else (
-    let current_points = List.map new_paths ~f:(fun x -> List.hd_exn x) in
-    let prev_points = List.map paths ~f:(fun x -> List.hd_exn x) in
-    let () = List.iter prev_points ~f:(fun (y, x) -> Fmt.pr "(%d %d)," y x) in
-    let () = Fmt.pr "\n" in
-    let () =
-      List.iter current_points ~f:(fun (current_y, current_x) ->
-        Fmt.pr "(%d %d)," current_y current_x)
+    let fine =
+      List.find new_paths ~f:(fun x ->
+        let pos = List.hd_exn x in
+        if compare_pos pos start then true else false)
     in
-    let () = Fmt.pr "\n\n" in
-    let intersection = find_intersections (current_points @ prev_points) in
-    match intersection with
-    | Some _ -> List.length (List.hd_exn new_paths) - 1
-    | None -> make_paths grid new_paths)
+    match fine with
+    | Some _ -> fine
+    | None -> make_paths grid new_paths start)
+;;
+
+let invalid_pos (new_y, new_x) grid =
+  new_y < 0
+  || new_x < 0
+  || new_y >= List.length grid
+  || new_x >= List.length (List.hd_exn grid)
 ;;
 
 let rec build_start grid movement (start_y, start_x) acc =
@@ -161,23 +155,19 @@ let rec build_start grid movement (start_y, start_x) acc =
   | [] -> acc
   | (movement_y, movement_x) :: movement ->
     let new_y, new_x = start_y + movement_y, start_x + movement_x in
-    let invalid_path =
-      new_y < 0
-      || new_x < 0
-      || new_y >= List.length grid
-      || new_x >= List.length (List.hd_exn grid)
-    in
+    let invalid_path = invalid_pos (new_y, new_x) grid in
     let acc =
       if (not invalid_path)
          && accepts_movement
               (List.nth_exn (List.nth_exn grid new_y) new_x)
               (movement_y, movement_x)
-      then acc @ [ [ new_y, new_x; start_y, start_y ] ]
+      then acc @ [ [ new_y, new_x; start_y, start_x ] ]
       else acc
     in
     build_start grid movement (start_y, start_x) acc
 ;;
 
+let movement = [ 1, 0; -1, 0; 0, -1; 0, 1 ]
 let lines = Advent.Advent_tools.read_lines "./input/puzzle10.txt"
 let grid = build_grid lines []
 
@@ -188,7 +178,41 @@ let start_x, start_y =
 ;;
 
 let start = start_x, start_y
-let () = Fmt.pr "start %d %d \n" start_x start_y
-let movement = [ 1, 0; -1, 0; 0, -1; 0, 1 ]
 let start_paths = build_start grid movement start []
-let () = make_paths grid start_paths |> Fmt.pr "Result: %d\n"
+
+let path =
+  match make_paths grid start_paths start with
+  | Some x -> x
+  | None -> raise (Invalid_argument "no path found ")
+;;
+
+let () = Fmt.pr "%d \n" (List.length path / 2)
+
+let count, _, _ =
+  List.fold
+    grid
+    ~init:(0, -1, (0, 0))
+    ~f:(fun (count, _, (y, x)) row ->
+      let count, _, (y, _) =
+        List.fold
+          row
+          ~init:(count, -1, (y, x))
+          ~f:(fun (count, inside, (y, x)) _c ->
+            let path_member = List.mem path (y, x) ~equal:compare_pos in
+            let inside =
+              if path_member
+              then (
+                match List.nth_exn (List.nth_exn grid y) x with
+                | VERTICAL -> inside * -1
+                | J_PIPE -> inside * -1
+                | L_PIPE -> inside * -1
+                | _ -> inside)
+              else inside
+            in
+            let count = if inside > 0 && not path_member then count + 1 else count in
+            count, inside, (y, x + 1))
+      in
+      count, -1, (y + 1, 0))
+;;
+
+let () = Fmt.pr "%d" count
