@@ -34,9 +34,9 @@ let try_match full_puzzle dp_previous pos spring current_group =
 ;;
 
 let rec solve_puzzle full_puzzle spring puzzle dp_previous dp_current pos current_group =
-  match List.last puzzle with
-  | None -> dp_current
-  | Some c ->
+  match puzzle with
+  | [] -> dp_current
+  | c :: puzzle ->
     let next_value =
       match c with
       | '.' -> nth dp_current (pos - 1)
@@ -50,7 +50,7 @@ let rec solve_puzzle full_puzzle spring puzzle dp_previous dp_current pos curren
     (solve_puzzle [@tailcall])
       full_puzzle
       spring
-      (List.drop_last_exn puzzle)
+      puzzle
       dp_previous
       dp_current
       (pos + 1)
@@ -58,18 +58,17 @@ let rec solve_puzzle full_puzzle spring puzzle dp_previous dp_current pos curren
 ;;
 
 let rec solve_springs puzzle springs dp =
-  match List.last springs with
-  | None -> dp
-  | Some spring ->
-    let springs = List.drop_last_exn springs in
-    let dp = solve_puzzle (List.rev puzzle) spring puzzle dp [] 0 0 in
+  match springs with
+  | [] -> dp
+  | spring :: springs ->
+    let dp = solve_puzzle puzzle spring puzzle dp [] 0 0 in
     solve_springs puzzle springs dp
 ;;
 
 let solve record =
   let record = { puzzle = record.puzzle @ [ '.' ]; spring_num = record.spring_num } in
   let dp = fill_base_case (List.rev record.puzzle) [] true in
-  let dp = solve_springs record.puzzle record.spring_num dp in
+  let dp = solve_springs (List.rev record.puzzle) (List.rev record.spring_num) dp in
   List.last_exn dp
 ;;
 
@@ -95,7 +94,7 @@ let solve_five record =
     }
   in
   let dp = fill_base_case (List.rev record.puzzle) [] true in
-  let dp = solve_springs record.puzzle record.spring_num dp in
+  let dp = solve_springs (List.rev record.puzzle) (List.rev record.spring_num) dp in
   List.last_exn dp
 ;;
 
