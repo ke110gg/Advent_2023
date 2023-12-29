@@ -19,78 +19,47 @@ let is_valid_cord grid y x z limit =
 
 let update_adj heap full_map grid (y, x, z) (dy, dx) v limit =
   match is_valid_cord grid y x z limit with
-  | None -> heap, full_map
+  | None -> ()
   | Some dv ->
     let path_length = dv + v in
     (match CordMap.mem full_map (y, x, z, dy, dx) with
-     | true -> heap, full_map
-     | false ->
-       let () = Pairing_heap.add heap ((y, x, z, dy, dx), path_length) in
-       heap, full_map)
+     | true -> ()
+     | false -> Pairing_heap.add heap ((y, x, z, dy, dx), path_length))
 ;;
 
-let rec dijkstra grid heap full_map =
+let visit_adjacnet grid heap full_map y x z dx dy v z_min z_limit =
+  (*start of process*)
+  if dx = 0 && dy = 0
+  then (
+    let () = update_adj heap full_map grid (y + 1, x, 0) (1, 0) v z_limit in
+    update_adj heap full_map grid (y, x + 1, 0) (0, 1) v 9)
+  else (
+    let () =
+      if z < z_min
+      then ()
+      else (
+        let () = update_adj heap full_map grid (y + dx, x + dy, 0) (dx, dy) v z_limit in
+        update_adj heap full_map grid (y - dx, x - dy, 0) (-dx, -dy) v z_limit)
+    in
+    update_adj heap full_map grid (y + dy, x + dx, z + 1) (dy, dx) v z_limit)
+;;
+
+let rec dijkstra grid heap full_map z_min z_limit =
   match Pairing_heap.pop heap with
   | None -> raise (Invalid_argument "couldn't find finish")
   | Some ((y, x, z, dy, dx), v) ->
     if CordMap.mem full_map (y, x, z, dy, dx)
-    then dijkstra grid heap full_map
+    then dijkstra grid heap full_map z_min z_limit
     else (
       let full_map = CordMap.add_exn full_map ~key:(y, x, z, dy, dx) ~data:v in
-      if y = Array.length grid - 1 && x = Array.length grid.(0) - 1
+      if y = Array.length grid - 1 && x = Array.length grid.(0) - 1 && z >= z_min
       then v
       else (
-        let heap, full_map =
-          (*start of process*)
-          if dx = 0 && dy = 0
-          then (
-            let heap, full_map = update_adj heap full_map grid (y + 1, x, 0) (1, 0) v 2 in
-            update_adj heap full_map grid (y, x + 1, 0) (0, 1) v 2)
-          else (
-            let heap, full_map =
-              update_adj heap full_map grid (y + dx, x + dy, 0) (dx, dy) v 2
-            in
-            let heap, full_map =
-              update_adj heap full_map grid (y - dx, x - dy, 0) (-dx, -dy) v 2
-            in
-            update_adj heap full_map grid (y + dy, x + dx, z + 1) (dy, dx) v 2)
-        in
-        dijkstra grid heap full_map))
+        let () = visit_adjacnet grid heap full_map y x z dx dy v z_min z_limit in
+        dijkstra grid heap full_map z_min z_limit))
 ;;
 
-let rec dijkstra_part2 grid heap full_map =
-  match Pairing_heap.pop heap with
-  | None -> raise (Invalid_argument "couldn't find finish")
-  | Some ((y, x, z, dy, dx), v) ->
-    if CordMap.mem full_map (y, x, z, dy, dx)
-    then dijkstra_part2 grid heap full_map
-    else (
-      let full_map = CordMap.add_exn full_map ~key:(y, x, z, dy, dx) ~data:v in
-      if y = Array.length grid - 1 && x = Array.length grid.(0) - 1 && z >= 3
-      then v
-      else (
-        let heap, full_map =
-          (*start of process*)
-          if dx = 0 && dy = 0
-          then (
-            let heap, full_map = update_adj heap full_map grid (y + 1, x, 0) (1, 0) v 9 in
-            update_adj heap full_map grid (y, x + 1, 0) (0, 1) v 9)
-          else (
-            let heap, full_map =
-              if z < 3
-              then heap, full_map
-              else (
-                let heap, full_map =
-                  update_adj heap full_map grid (y + dx, x + dy, 0) (dx, dy) v 9
-                in
-                update_adj heap full_map grid (y - dx, x - dy, 0) (-dx, -dy) v 9)
-            in
-            update_adj heap full_map grid (y + dy, x + dx, z + 1) (dy, dx) v 9)
-        in
-        dijkstra_part2 grid heap full_map))
-;;
-
-let grid = Array.of_list (Advent.Advent_tools.read_lines "./input/test17.txt")
+let grid = Array.of_list (Advent.Advent_tools.read_lines "./input/puzzle17.txt")
 let grid = Array.map grid ~f:(fun l -> String.to_array l)
 let grid = Array.map grid ~f:(fun row -> Array.map row ~f:(fun c -> Char.get_digit_exn c))
 
@@ -102,8 +71,8 @@ let heap =
 ;;
 
 let () = Pairing_heap.add heap ((0, 0, 0, 0, 0), 0)
-let result = dijkstra grid heap CordMap.empty
-let () = Fmt.pr "result: %d" result
+let result = dijkstra grid heap CordMap.empty 0 2
+let () = Fmt.pr "result: %d\n" result
 
 let heap =
   Pairing_heap.create
@@ -113,5 +82,5 @@ let heap =
 ;;
 
 let () = Pairing_heap.add heap ((0, 0, 0, 0, 0), 0)
-let result = dijkstra_part2 grid heap CordMap.empty
-let () = Fmt.pr "result: %d" result
+let result = dijkstra grid heap CordMap.empty 3 9
+let () = Fmt.pr "result: %d\n" result
