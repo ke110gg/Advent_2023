@@ -21,26 +21,25 @@ let update_adj heap full_map grid (y, x, z) (dy, dx) v limit =
   match is_valid_cord grid y x z limit with
   | None -> ()
   | Some dv ->
-    let path_length = dv + v in
-    (match CordMap.mem full_map (y, x, z, dy, dx) with
-     | true -> ()
-     | false -> Pairing_heap.add heap ((y, x, z, dy, dx), path_length))
+    if not (CordMap.mem full_map (y, x, z, dy, dx))
+    then Pairing_heap.add heap ((y, x, z, dy, dx), dv + v)
 ;;
 
 let visit_adjacnet grid heap full_map y x z dx dy v z_min z_limit =
-  (*start of process*)
   if dx = 0 && dy = 0
   then (
+    (*start of process*)
     let () = update_adj heap full_map grid (y + 1, x, 0) (1, 0) v z_limit in
     update_adj heap full_map grid (y, x + 1, 0) (0, 1) v 9)
   else (
     let () =
-      if z < z_min
-      then ()
-      else (
+      if z >= z_min
+      then (
+        (*turn left and right*)
         let () = update_adj heap full_map grid (y + dx, x + dy, 0) (dx, dy) v z_limit in
         update_adj heap full_map grid (y - dx, x - dy, 0) (-dx, -dy) v z_limit)
     in
+    (*straight ahead*)
     update_adj heap full_map grid (y + dy, x + dx, z + 1) (dy, dx) v z_limit)
 ;;
 
@@ -71,8 +70,10 @@ let heap =
 ;;
 
 let () = Pairing_heap.add heap ((0, 0, 0, 0, 0), 0)
+let t = Time_ns.to_int_ns_since_epoch (Time_ns.now ())
 let result = dijkstra grid heap CordMap.empty 0 2
-let () = Fmt.pr "result: %d\n" result
+let t2 = Time_ns.to_int_ns_since_epoch (Time_ns.now ())
+let () = Fmt.pr "result: %d in %d ms \n" result ((t2 - t) / 1000000)
 
 let heap =
   Pairing_heap.create
@@ -82,5 +83,7 @@ let heap =
 ;;
 
 let () = Pairing_heap.add heap ((0, 0, 0, 0, 0), 0)
+let t = Time_ns.to_int_ns_since_epoch (Time_ns.now ())
 let result = dijkstra grid heap CordMap.empty 3 9
-let () = Fmt.pr "result: %d\n" result
+let t2 = Time_ns.to_int_ns_since_epoch (Time_ns.now ())
+let () = Fmt.pr "result: %d in %d ms \n" result ((t2 - t) / 1000000)
