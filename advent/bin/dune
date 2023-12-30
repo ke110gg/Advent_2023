@@ -16,7 +16,8 @@
   day_14
   day_15
   day_16
-  day_17)
+  day_17
+  day_18)
  (names
   day_1
   day_2
@@ -34,7 +35,8 @@
   day_14
   day_15
   day_16
-  day_17)
+  day_17
+  day_18)
  (preprocess
   (pps ppx_sexp_conv ppx_deriving.show ppx_compare))
  (libraries advent core fmt core_kernel.pairing_heap))
