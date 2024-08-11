@@ -111,10 +111,10 @@ let () =
     64
     false
     0
-  |> Fmt.pr "part 1 result: %d\n"
+  |> Fmt.pr "part 1 result: %d\n%!"
 ;;
 
-let () = Fmt.pr "Starting part 2"
+let () = Fmt.pr "Starting part 2\n%!"
 
 let a0 =
   walk
