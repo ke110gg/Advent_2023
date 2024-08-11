@@ -214,7 +214,7 @@ let build_conjunctions hash_map =
 
 let list_to_string list = List.fold list ~init:"" ~f:(fun i acc -> acc ^ ", " ^ i)
 
-let print_table_value name mod_val =
+let print_table_value (name : string) mod_val =
   let mod_type = _module_to_string mod_val in
   let dests = list_to_string (Mod.get_dest mod_val) in
   Fmt.pr "%s%s -> %s\n\n" mod_type name dests
